@@ -4,6 +4,7 @@ See the following paper for more information.
 	
 	* Qingyao Ai, Keping Bi, Jiafeng Guo, W. Bruce Croft. 2018. Learning a Deep Listwise Context Model for Ranking Refinement. In Proceedings of SIGIR '18
 """
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

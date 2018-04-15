@@ -1,19 +1,9 @@
-# Copyright 2015 The TensorFlow Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#	 http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
+"""Training and testing the Deep Listwise Context Model.
 
-"""Sequence-to-sequence model with an attention mechanism."""
+See the following paper for more information.
+	
+	* Qingyao Ai, Keping Bi, Jiafeng Guo, W. Bruce Croft. 2018. Learning a Deep Listwise Context Model for Ranking Refinement. In Proceedings of SIGIR '18
+"""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -55,36 +45,10 @@ from tensorflow.python.util import nest
 linear = rnn_cell_impl._linear  # pylint: disable=protected-access
 
 class RankLSTM(object):
-	"""Sequence-to-sequence model with attention and for multiple buckets.
-
-	This class implements a multi-layer recurrent neural network as encoder,
-	and an attention-based decoder. This is the same as the model described in
-	this paper: http://arxiv.org/abs/1412.7449 - please look there for details,
-	or into the seq2seq library for complete model implementation.
-	This class also allows to use GRU cells in addition to LSTM cells, and
-	sampled softmax to handle large output vocabulary size. A single-layer
-	version of this model, but with bi-directional encoder, was presented in
-	http://arxiv.org/abs/1409.0473
-	and sampled softmax is described in Section 3 of the following paper.
-	http://arxiv.org/abs/1412.2007
-	"""
-
 	def __init__(self, rank_list_size, embed_size, expand_embed_size, batch_size,
 				 hparam_str, forward_only=False, feed_previous = False):
 		"""Create the model.
-	
-		Args:
-			rank_list_size: size of the ranklist.
-			embed_size: number of units in each layer of the model (feature length).
-			num_layers: number of layers in the model.
-			max_gradient_norm: gradients will be clipped to maximally this norm.
-			batch_size: the size of the batches used during training;
-			the model construction is not independent of batch_size, so it cannot be
-			changed after initialization.
-			learning_rate: learning rate to start with.
-			learning_rate_decay_factor: decay learning rate by this much when needed.
-			use_lstm: if true, we use LSTM cells instead of GRU cells.
-			forward_only: if set, we do not construct the backward pass in the model.
+
 		"""
 		self.hparams = tf.contrib.training.HParams(
 			learning_rate=0.5, 				# Learning rate.
@@ -196,22 +160,6 @@ class RankLSTM(object):
 			 target_weights, target_initial_score, forward_only):
 		"""Run a step of the model feeding the given inputs.
 
-		Args:
-			session: tensorflow session to use.
-			encoder_inputs: list of numpy [None, embedd_size] float vectors to feed as encoder inputs.
-			decoder_inputs: list of numpy [None, embedd_size] float vectors to feed as decoder inputs.
-			target_labels: list of numpy int vectors to feed as target re-ranking labels.
-			target_weights: list of numpy float vectors to feed as target weights.
-			bucket_id: which bucket of the model to use.
-			forward_only: whether to do the backward step or only forward.
-
-		Returns:
-			A triple consisting of gradient norm (or None if we did not do backward),
-			average perplexity, and the outputs.
-
-		Raises:
-			ValueError: if length of encoder_inputs, decoder_inputs, or
-			target_weights disagrees with bucket size for the specified bucket_id.
 		"""
 		# Check if the sizes match.
 		if len(encoder_inputs) != self.rank_list_size:
@@ -318,19 +266,6 @@ class RankLSTM(object):
 	def get_batch(self, input_seq, output_seq, output_weights, output_initial_score, features):
 		"""Get a random batch of data from the specified bucket, prepare for step.
 
-		To feed data in step(..) it must be a list of batch-major vectors, while
-		data here contains single length-major cases. So the main logic of this
-		function is to re-index data cases to be in the proper format for feeding.
-
-		Args:
-			input_seq: a list of initial ranking ([0,1,2,3,4...])
-			output_seq: the target ranking list ([2,3,1,0,4,...])
-			output_weights: the weight list of each inputs
-			features: a list of feature vectors for initial ranking list
-
-		Returns:
-			The triple (encoder_inputs, decoder_inputs, target_weights) for
-			the constructed batch that has the proper format to call step(...) later.
 		"""
 
 		if len(input_seq[0]) != self.rank_list_size:
@@ -384,21 +319,8 @@ class RankLSTM(object):
 		return batch_encoder_inputs, embeddings, batch_targets, batch_weights, batch_initial_scores, cache
 
 	def get_next_batch(self, index, input_seq, output_seq, output_weights, output_initial_score, features):
-		"""Get a random batch of data from the specified bucket, prepare for step.
+		"""Get the next batch of data from the specified bucket, prepare for step.
 
-		To feed data in step(..) it must be a list of batch-major vectors, while
-		data here contains single length-major cases. So the main logic of this
-		function is to re-index data cases to be in the proper format for feeding.
-
-		Args:
-			input_seq: a list of initial ranking ([0,1,2,3,4...])
-			output_seq: the target ranking list ([2,3,1,0,4,...])
-			output_weights: the weight list of each inputs
-			features: a list of feature vectors for initial ranking list
-
-		Returns:
-			The triple (encoder_inputs, decoder_inputs, target_weights) for
-			the constructed batch that has the proper format to call step(...) later.
 		"""
 		alpha = 1.0
 
@@ -461,17 +383,7 @@ class RankLSTM(object):
 	def get_data_by_index(self, input_seq, output_seq, output_weights, output_initial_score, features, index): #not fixed
 		"""Get one data from the specified index, prepare for step.
 
-				Args:
-					input_seq: a list of initial ranking ([0,1,2,3,4...])
-					output_seq: the target ranking list ([2,3,1,0,4,...])
-					output_weights: the weight list of each output
-					features: a list of feature vectors for initial ranking list
-					index: the index of the data
-
-				Returns:
-					The triple (encoder_inputs, decoder_inputs, target_weights) for
-					the constructed batch that has the proper format to call step(...) later.
-				"""
+		"""
 		if len(input_seq[0]) != self.rank_list_size:
 			raise ValueError("Input ranklist length must be equal to the one in bucket,"
 							 " %d != %d." % (len(input_seq[0]), self.rank_list_size))
@@ -547,28 +459,6 @@ class RankLSTM(object):
 					 initial_state_attention=False):
 		"""RNN decoder for the sequence-to-sequence model.
 
-		Args:
-		decoder_inputs: A list of 2D Tensors [batch_size x input_size].
-		initial_state: 2D Tensor with shape [batch_size x cell.state_size].
-		cell: rnn_cell.RNNCell defining the cell function and size.
-		loop_function: If not None, this function will be applied to the i-th output
-			in order to generate the i+1-st input, and decoder_inputs will be ignored,
-			except for the first element ("GO" symbol). This can be used for decoding,
-			but also for training to emulate http://arxiv.org/abs/1506.03099.
-			Signature -- loop_function(prev, i) = next
-			* prev is a 2D Tensor of shape [batch_size x output_size],
-			* i is an integer, the step number (when advanced control is needed),
-			* next is a 2D Tensor of shape [batch_size x input_size].
-		scope: VariableScope for the created subgraph; defaults to "rnn_decoder".
-
-		Returns:
-		A tuple of the form (outputs, state), where:
-			outputs: A list of the same length as decoder_inputs of 2D Tensors with
-			shape [batch_size x output_size] containing generated outputs.
-			state: The state of each cell at the final time-step.
-			It is a 2D Tensor of shape [batch_size x cell.state_size].
-			(Note that in some cases, like basic RNN cell or GRU cell, outputs and
-			 states can be the same. They are different for LSTM cells though.)
 		"""
 		with variable_scope.variable_scope(scope or "rnn_decoder"):
 			batch_size = tf.shape(encode_embed[0])[0]# Needed for reshaping.
@@ -719,40 +609,6 @@ class RankLSTM(object):
 							 update_embedding_for_previous=True, scope=None):
 		"""RNN decoder with embedding and a pure-decoding option.
 
-		Args:
-		decoder_inputs: A list of 1D batch-sized int32 Tensors (decoder inputs).
-		initial_state: 2D Tensor [batch_size x cell.state_size].
-		cell: rnn_cell.RNNCell defining the cell function.
-		num_symbols: Integer, how many symbols come into the embedding.
-		embedding_size: Integer, the length of the embedding vector for each symbol.
-		output_projection: None or a pair (W, B) of output projection weights and
-			biases; W has shape [output_size x num_symbols] and B has
-			shape [num_symbols]; if provided and feed_previous=True, each fed
-			previous output will first be multiplied by W and added B.
-		feed_previous: Boolean; if True, only the first of decoder_inputs will be
-			used (the "GO" symbol), and all other decoder inputs will be generated by:
-			next = embedding_lookup(embedding, argmax(previous_output)),
-			In effect, this implements a greedy decoder. It can also be used
-			during training to emulate http://arxiv.org/abs/1506.03099.
-			If False, decoder_inputs are used as given (the standard decoder case).
-		update_embedding_for_previous: Boolean; if False and feed_previous=True,
-			only the embedding for the first symbol of decoder_inputs (the "GO"
-			symbol) will be updated by back propagation. Embeddings for the symbols
-			generated from the decoder itself remain unchanged. This parameter has
-			no effect if feed_previous=False.
-		scope: VariableScope for the created subgraph; defaults to
-			"embedding_rnn_decoder".
-
-		Returns:
-		A tuple of the form (outputs, state), where:
-			outputs: A list of the same length as decoder_inputs of 2D Tensors with
-			shape [batch_size x output_size] containing the generated outputs.
-			state: The state of each decoder cell in each time-step. This is a list
-			with length len(decoder_inputs) -- one item for each time-step.
-			It is a 2D Tensor of shape [batch_size x cell.state_size].
-
-		Raises:
-		ValueError: When output_projection has the wrong shape.
 		"""
 		if output_projection is not None:
 			proj_weights = ops.convert_to_tensor(output_projection[0],
@@ -779,41 +635,7 @@ class RankLSTM(object):
 							 scope=None):
 		"""Embedding RNN sequence-to-sequence model.
 
-		This model first embeds encoder_inputs by a newly created embedding (of shape
-		[num_encoder_symbols x input_size]). Then it runs an RNN to encode
-		embedded encoder_inputs into a state vector. Next, it embeds decoder_inputs
-		by another newly created embedding (of shape [num_decoder_symbols x
-		input_size]). Then it runs RNN decoder, initialized with the last
-		encoder state, on embedded decoder_inputs.
-
-		Args:
-		encoder_inputs: A list of 1D int32 Tensors of shape [batch_size].
-		decoder_inputs: A list of 1D int32 Tensors of shape [batch_size].
-		cell: rnn_cell.RNNCell defining the cell function and size.
-		num_encoder_symbols: Integer; number of symbols on the encoder side.
-		num_decoder_symbols: Integer; number of symbols on the decoder side.
-		embedding_size: Integer, the length of the embedding vector for each symbol.
-		output_projection: None or a pair (W, B) of output projection weights and
-			biases; W has shape [output_size x num_decoder_symbols] and B has
-			shape [num_decoder_symbols]; if provided and feed_previous=True, each
-			fed previous output will first be multiplied by W and added B.
-		feed_previous: Boolean or scalar Boolean Tensor; if True, only the first
-			of decoder_inputs will be used (the "GO" symbol), and all other decoder
-			inputs will be taken from previous outputs (as in embedding_rnn_decoder).
-			If False, decoder_inputs are used as given (the standard decoder case).
-		dtype: The dtype of the initial state for both the encoder and encoder
-			rnn cells (default: tf.float32).
-		scope: VariableScope for the created subgraph; defaults to
-			"embedding_rnn_seq2seq"
-
-		Returns:
-		A tuple of the form (outputs, state), where:
-			outputs: A list of the same length as decoder_inputs of 2D Tensors with
-			shape [batch_size x num_decoder_symbols] containing the generated
-			outputs.
-			state: The state of each decoder cell in each time-step. This is a list
-			with length len(decoder_inputs) -- one item for each time-step.
-			It is a 2D Tensor of shape [batch_size x cell.state_size].
+		
 		"""
 		with variable_scope.variable_scope(scope or "embedding_rnn_seq2seq"):
 			embeddings = tf.concat(axis=0,values=[embeddings,self.PAD_embed])
