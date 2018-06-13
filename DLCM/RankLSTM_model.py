@@ -127,7 +127,7 @@ class RankLSTM(object):
 		print('Loss Function is ' + self.hparams.loss_func)
 		self.loss = None
 		if self.hparams.loss_func == 'softmax':
-			self.loss = self.pointwise_loss(self.outputs[0], self.target_labels, self.target_weights)
+			self.loss = self.attrank_loss(self.outputs[0], self.target_labels, self.target_weights)
 		elif self.hparams.loss_func == 'listMLE':
 			self.loss = self.listMLE(self.outputs[0], self.target_labels, self.target_weights)
 		elif self.hparams.loss_func == 'softRank':
@@ -712,9 +712,9 @@ class RankLSTM(object):
 													lambda: decoder(False))
 			return outputs_and_state[:-1], outputs_and_state[-1]
 
-	def pointwise_loss(self, output, target_indexs, target_rels, name=None):
+	def attrank_loss(self, output, target_indexs, target_rels, name=None):
 		loss = 600
-		with ops.name_scope(name, "pointwise_loss",[output] + target_indexs + target_rels):
+		with ops.name_scope(name, "attrank_loss",[output] + target_indexs + target_rels):
 			target = tf.transpose(ops.convert_to_tensor(target_rels))
 			#target = tf.nn.softmax(target)
 			#target = target / tf.reduce_sum(target,1,keep_dims=True)
