@@ -57,7 +57,7 @@ class RankLSTM(object):
 			reverse_input=True,				# Set to True for reverse input sequences.
 			num_layers=1,					# Number of layers in the model.
 			num_heads=3,					# Number of heads in the attention strategy.
-			loss_func='softmax',			# Select Loss function
+			loss_func='attrank',			# Select Loss function
 			l2_loss=0.0,					# Set strength for L2 regularization.
 			att_strategy='add',				# Select Attention strategy
 			use_residua=False,				# Set to True for using the initial scores to compute residua.
@@ -126,7 +126,7 @@ class RankLSTM(object):
 		# Training outputs and losses.
 		print('Loss Function is ' + self.hparams.loss_func)
 		self.loss = None
-		if self.hparams.loss_func == 'softmax':
+		if self.hparams.loss_func == 'attrank':
 			self.loss = self.attrank_loss(self.outputs[0], self.target_labels, self.target_weights)
 		elif self.hparams.loss_func == 'listMLE':
 			self.loss = self.listMLE(self.outputs[0], self.target_labels, self.target_weights)
@@ -221,7 +221,7 @@ class RankLSTM(object):
 			encoder_inputs.append(list(reversed([-1 if input_seq[i][x] < 0 else base+x for x in xrange(len(input_seq[i]))])))
 			decoder_weights.append(list(reversed([0 if input_seq[i][x] < 0 else output_weights[i][x] for x in xrange(len(input_seq[i]))])))
 			decoder_initial_scores.append(list(reversed([0 if input_seq[i][x] < 0 else output_initial_score[i][x] for x in xrange(len(input_seq[i]))])))
-			if self.hparams.loss_func == 'softmax':
+			if self.hparams.loss_func == 'attrank':
 				weight_sum = 0
 				for w in xrange(len(decoder_weights[-1])):
 					decoder_weights[-1][w] = math.exp(decoder_weights[-1][w]) if decoder_weights[-1][w] > 0 else 0
