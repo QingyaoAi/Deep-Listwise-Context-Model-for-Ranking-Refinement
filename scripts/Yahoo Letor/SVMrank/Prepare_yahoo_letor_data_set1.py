@@ -122,7 +122,7 @@ def main():
 	DATASET_NAME = 'set1'
 	INITIAL_RANK_PATH = sys.argv[2]
 	OUTPUT_PATH = sys.argv[3]
-	RANK_CUT = sys.argv[4]
+	RANK_CUT = int(sys.argv[4])
 	SET_NAME = ['train','test','valid']
 	FEATURE_DIM = 700
 	#SET_NAME = ['valid']
