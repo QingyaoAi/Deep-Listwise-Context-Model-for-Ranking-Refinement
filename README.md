@@ -1,4 +1,7 @@
 # Overview #
+
+🔥**News: A new implementation of DLCM with better documentations can be found in [ULTRA](https://github.com/ULTR-Community/ULTRA).**
+
 This is an implementation of the Deep Listwise Context Model (DLCM) for ranking refinement <1>. Please cite the following paper if you plan to use it for your project：
     
 *	Qingyao Ai, Keping Bi, Jiafeng Guo, W. Bruce Croft. 2018. Learning a Deep Listwise Context Model for Ranking Refinement. In Proceedings of SIGIR ’18
