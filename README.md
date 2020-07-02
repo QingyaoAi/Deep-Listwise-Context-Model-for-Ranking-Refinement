@@ -13,7 +13,7 @@ The DLCM is a deep model that uses a recurrent neural network to encode the feat
 
 ### Data Preparation ###
 	For simplicity, here we show the instruction of data preparation for SVMrank on Yahoo letor set 1 and attached the corresponding scripts in /scripts/. You can extend the scripts or write your own code to prepare the data for other letor datasets and learning algorithms.
-    1. Download Yahoo Letor dataset 1 from (http://webscope.sandbox.yahoo.co).
+    1. Download Yahoo Letor dataset 1 from (https://webscope.sandbox.yahoo.com/catalog.php?datatype=c).
     2. Decompressed the files and put the data into a single directory. The directory should be like the follows:
     	<letor_data_path>: # the directory of letor data
     		/set1.train.txt # the data used for training
